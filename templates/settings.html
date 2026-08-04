@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — EdgeMind AI Studio</title>
+    <!-- FAVICON -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <!-- LOCAL OFFLINE FONTS & LUCIDE ICONS -->
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script src="/static/js/lucide.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="settings-page">
+
+    <!-- TOP HEADER NAVBAR -->
+    <header class="top-navbar">
+        <div class="brand-group">
+            <div class="brand-icon">
+                <i data-lucide="cpu" class="icon-brand"></i>
+            </div>
+            <div>
+                <div class="brand-title">EdgeMind <span class="badge-tag">VORENTHIC LABS</span></div>
+                <div class="brand-subtitle">Self-Optimizing Local Neural Engine</div>
+            </div>
+        </div>
+
+        <!-- MAIN NAVIGATION LINKS -->
+        <nav class="nav-links">
+            <a href="/" class="nav-link">
+                <i data-lucide="wand-2"></i>
+                <span>Studio</span>
+            </a>
+            <a href="/settings" class="nav-link active">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <!-- MOBILE HUD TOGGLE -->
+        <button class="mobile-hud-toggle" onclick="toggleMobileHud()" title="System Stats">
+            <i data-lucide="activity"></i>
+        </button>
+
+        <!-- HARDWARE TELEMETRY HUD -->
+        <div class="telemetry-hud">
+            <div class="hud-item" id="profile-badge">
+                <span class="status-dot"></span>
+                <span id="profile-name">Detecting Hardware...</span>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="microchip"></i>
+                    <span>GPU / ENGINE</span>
+                </div>
+                <div class="stat-val" id="device-name">--</div>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="activity"></i>
+                    <span>VRAM MEMORY</span>
+                    <span class="stat-num" id="vram-val">0.0 / 0.0 GB</span>
+                </div>
+                <div class="stat-meter"><div class="meter-fill" id="vram-bar"></div></div>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="hard-drive"></i>
+                    <span>SYSTEM RAM</span>
+                    <span class="stat-num" id="ram-val">0.0 / 0.0 GB</span>
+                </div>
+                <div class="stat-meter"><div class="meter-fill" id="ram-bar"></div></div>
+            </div>
+
+            <button class="btn-icon-action" onclick="unloadModel()" title="Free VRAM & Unload Model">
+                <i data-lucide="trash-2"></i>
+                <span>Free VRAM</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- SETTINGS MAIN CONTAINER -->
+    <main class="settings-container">
+        
+        <!-- PAGE HEADER -->
+        <section class="settings-page-header">
+            <div class="settings-title-group">
+                <div class="settings-header-icon">
+                    <i data-lucide="sliders"></i>
+                </div>
+                <div>
+                    <h1>Engine Settings & Preferences</h1>
+                    <p>Configure sampling parameters, default quality presets, Hugging Face downloads, and memory offloading.</p>
+                </div>
+            </div>
+            <a href="/" class="btn-generate-neon">
+                <i data-lucide="sparkles"></i>
+                <span>Back to Studio</span>
+            </a>
+        </section>
+
+        <!-- SETTINGS GRID -->
+        <section class="settings-grid">
+            
+            <!-- CARD 1: QUALITY & STYLE PRESETS -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <i data-lucide="sparkles" class="card-icon"></i>
+                    <h2>Quality & Style Presets</h2>
+                </div>
+
+                <div class="field-group">
+                    <label>Default Style Preset</label>
+                    <div class="custom-dropdown" id="dropdown-style-settings">
+                        <button class="custom-dropdown-trigger" type="button" onclick="toggleCustomDropdown('dropdown-style-settings')">
+                            <i data-lucide="sparkles" class="dropdown-trigger-icon" id="settings-style-selected-icon"></i>
+                            <span id="settings-style-selected-label">Photorealistic</span>
+                            <i data-lucide="chevron-down" class="dropdown-arrow"></i>
+                        </button>
+                        <div class="custom-dropdown-menu" id="settings-style-menu">
+                            <div class="custom-dropdown-item active" onclick="selectStylePreset('photorealistic', 'Photorealistic', 'sparkles', 'dropdown-style-settings')">
+                                <i data-lucide="sparkles"></i>
+                                <span>Photorealistic</span>
+                            </div>
+                            <div class="custom-dropdown-item" onclick="selectStylePreset('cinematic', 'Cinematic Film', 'clapperboard', 'dropdown-style-settings')">
+                                <i data-lucide="clapperboard"></i>
+                                <span>Cinematic Film</span>
+                            </div>
+                            <div class="custom-dropdown-item" onclick="selectStylePreset('anime', 'Anime Visual', 'palette', 'dropdown-style-settings')">
+                                <i data-lucide="palette"></i>
+                                <span>Anime Visual</span>
+                            </div>
+                            <div class="custom-dropdown-item" onclick="selectStylePreset('cyberpunk', 'Cyberpunk Neon', 'zap', 'dropdown-style-settings')">
+                                <i data-lucide="zap"></i>
+                                <span>Cyberpunk Neon</span>
+                            </div>
+                            <div class="custom-dropdown-item" onclick="selectStylePreset('3d', '3D Render', 'box', 'dropdown-style-settings')">
+                                <i data-lucide="box"></i>
+                                <span>3D Render</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="quality-preset" value="photorealistic" onchange="saveAllSettings()">
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label>
+                        <span>Auto Quality Enhancer</span>
+                        <label class="switch">
+                            <input type="checkbox" id="auto-enhance" checked onchange="saveAllSettings()">
+                            <span class="slider-switch"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <div class="field-group">
+                    <label>Default Negative Prompt <span class="hint">Applied automatically</span></label>
+                    <textarea id="negative-prompt" rows="3" placeholder="blurry, low quality, distorted, bad anatomy, ugly, extra limbs..." oninput="saveAllSettings()"></textarea>
+                </div>
+            </div>
+
+            <!-- CARD 2: SAMPLING & INFERENCE -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <i data-lucide="settings-2" class="card-icon"></i>
+                    <h2>Sampling & Inference</h2>
+                </div>
+
+                <div class="field-group">
+                    <div class="label-row">
+                        <label>Inference Steps: <span class="slider-val" id="val-steps">1</span></label>
+                        <div class="quick-chips">
+                            <button class="chip-btn active" onclick="setSteps(1); saveAllSettings();">⚡ 1-Step (Hyper-SD)</button>
+                            <button class="chip-btn" onclick="setSteps(4); saveAllSettings();">4</button>
+                            <button class="chip-btn" onclick="setSteps(25); saveAllSettings();">25 (Quality)</button>
+                            <button class="chip-btn" onclick="setSteps(50); saveAllSettings();">50 (Ultra)</button>
+                        </div>
+                    </div>
+                    <input type="range" id="steps" min="1" max="150" value="1" oninput="document.getElementById('val-steps').innerText = this.value; saveAllSettings();">
+                </div>
+
+                <div class="field-group">
+                    <div class="label-row">
+                        <label>CFG Guidance Scale: <span class="slider-val" id="val-cfg">1.0</span></label>
+                        <div class="quick-chips">
+                            <button class="chip-btn active" onclick="setCFG(1.0); saveAllSettings();">1.0 (Fast / Hyper-SD)</button>
+                            <button class="chip-btn" onclick="setCFG(7.5); saveAllSettings();">7.5 (Standard)</button>
+                        </div>
+                    </div>
+                    <input type="range" id="cfg" min="1" max="20" step="0.5" value="1.0" oninput="document.getElementById('val-cfg').innerText = this.value; saveAllSettings();">
+                </div>
+
+                <div class="grid-2col">
+                    <div class="field-group">
+                        <label>Default Sampler</label>
+                        <select id="sampler" onchange="saveAllSettings()">
+                            <option value="Euler">Euler</option>
+                            <option value="Euler a">Euler Ancestral</option>
+                            <option value="DPM++ 2M">DPM++ 2M</option>
+                            <option value="UniPC">UniPC</option>
+                            <option value="DDIM">DDIM</option>
+                            <option value="Heun">Heun</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>Seed (-1 = Random)</label>
+                        <input type="number" id="seed" value="-1" onchange="saveAllSettings()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: MODEL HUB & HF DOWNLOADER -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <i data-lucide="download-cloud" class="card-icon"></i>
+                    <h2>Model Hub & Downloader</h2>
+                </div>
+
+                <!-- HUGGING FACE DOWNLOADER CARD -->
+                <div class="hf-download-card">
+                    <div class="hf-header">
+                        <i data-lucide="download" class="hf-icon"></i>
+                        <span>Hugging Face Hub Downloader</span>
+                    </div>
+                    <div class="hf-input-group">
+                        <input type="text" id="hf-url-input" placeholder="runwayml/stable-diffusion-v1-5">
+                        <button onclick="downloadHFModel()" id="btn-dl-hf" class="btn-hf">
+                            <i data-lucide="arrow-down-to-line"></i>
+                            Download
+                        </button>
+                    </div>
+
+                    <!-- DOWNLOAD PROGRESS BAR -->
+                    <div id="dl-status-container" class="dl-status-box" style="display: none;">
+                        <div class="dl-text-row">
+                            <span id="dl-msg">Connecting...</span>
+                            <span id="dl-stats-text">0 MB | 0 MB/s</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-bar" id="dl-bar-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INSTALLED MODELS LIST -->
+                <div class="field-group margin-top-sm">
+                    <label>Installed Local Models <span class="hint" id="model-count-hint">-- models found</span></label>
+                    <div class="models-list-box" id="models-list-box">
+                        <!-- Loaded via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 4: HARDWARE OPTIMIZATIONS -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <i data-lucide="cpu" class="card-icon"></i>
+                    <h2>Hardware & Memory Optimizations</h2>
+                </div>
+
+                <div class="toggle-grid-settings">
+                    <div class="toggle-chip-large">
+                        <div>
+                            <div class="toggle-title">CPU Offload</div>
+                            <div class="toggle-desc">Sequential sub-module execution on CPU for low VRAM systems</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="opt-cpu-offload" checked onchange="saveAllSettings()">
+                            <span class="slider-switch"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-chip-large">
+                        <div>
+                            <div class="toggle-title">VAE Tiling</div>
+                            <div class="toggle-desc">Decodes high resolution images in smaller tiles to prevent VRAM OOM</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="opt-vae-tiling" checked onchange="saveAllSettings()">
+                            <span class="slider-switch"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-chip-large">
+                        <div>
+                            <div class="toggle-title">Attention Slicing</div>
+                            <div class="toggle-desc">Slices attention computation into steps to save VRAM</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="opt-attn-slicing" checked onchange="saveAllSettings()">
+                            <span class="slider-switch"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-chip-large">
+                        <div>
+                            <div class="toggle-title">FP16 Half Precision</div>
+                            <div class="toggle-desc">16-bit floating point inference for faster generation and lower VRAM</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="opt-fp16" checked onchange="saveAllSettings()">
+                            <span class="slider-switch"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- FOOTER BAR -->
+        <section class="settings-footer">
+            <button class="btn-text-action danger" onclick="resetDefaultSettings()">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Reset to Factory Defaults</span>
+            </button>
+            <div class="save-toast" id="save-toast">
+                <i data-lucide="check-circle"></i>
+                <span>Settings saved automatically!</span>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SCRIPT -->
+    <script src="/static/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedSettings();
+            renderSettingsModelsList();
+        });
+    </script>
+</body>
+</html>

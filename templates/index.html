@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeMind AI Studio — Self-Optimizing Local AI Engine</title>
+    <!-- FAVICON -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <!-- LOCAL OFFLINE FONTS & LUCIDE ICONS -->
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script src="/static/js/lucide.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- TOP HEADER NAVBAR -->
+    <header class="top-navbar">
+        <div class="brand-group">
+            <div class="brand-icon">
+                <i data-lucide="cpu" class="icon-brand"></i>
+            </div>
+            <div>
+                <div class="brand-title">EdgeMind <span class="badge-tag">VORENTHIC LABS</span></div>
+                <div class="brand-subtitle">Self-Optimizing Local Neural Engine</div>
+            </div>
+        </div>
+
+        <!-- MAIN NAVIGATION LINKS -->
+        <nav class="nav-links">
+            <a href="/" class="nav-link active">
+                <i data-lucide="wand-2"></i>
+                <span>Studio</span>
+            </a>
+            <a href="/settings" class="nav-link">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <!-- MOBILE HUD TOGGLE -->
+        <button class="mobile-hud-toggle" onclick="toggleMobileHud()" title="System Stats">
+            <i data-lucide="activity"></i>
+        </button>
+
+        <!-- HARDWARE TELEMETRY HUD -->
+        <div class="telemetry-hud">
+            <div class="hud-item" id="profile-badge">
+                <span class="status-dot"></span>
+                <span id="profile-name">Detecting Hardware...</span>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="microchip"></i>
+                    <span>GPU / ENGINE</span>
+                </div>
+                <div class="stat-val" id="device-name">--</div>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="activity"></i>
+                    <span>VRAM MEMORY</span>
+                    <span class="stat-num" id="vram-val">0.0 / 0.0 GB</span>
+                </div>
+                <div class="stat-meter"><div class="meter-fill" id="vram-bar"></div></div>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="hard-drive"></i>
+                    <span>SYSTEM RAM</span>
+                    <span class="stat-num" id="ram-val">0.0 / 0.0 GB</span>
+                </div>
+                <div class="stat-meter"><div class="meter-fill" id="ram-bar"></div></div>
+            </div>
+
+            <button class="btn-icon-action" onclick="unloadModel()" title="Free VRAM & Unload Model">
+                <i data-lucide="trash-2"></i>
+                <span>Free VRAM</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- HERO WORKSPACE -->
+    <main class="hero-container">
+        
+        <!-- HIGGSFIELD-STYLE HERO HEADLINE -->
+        <section class="hero-headline">
+            <h1>EdgeMind <span class="text-gradient">by Vorenthic Labs</span></h1>
+            <p>Commercial-ready local visuals in seconds. Every leading model at your fingertips.</p>
+        </section>
+
+        <!-- FLOATING PROMPT BAR (HIGGSFIELD DOCK) -->
+        <section class="prompt-dock-container" id="prompt-dock">
+            <div class="prompt-dock-card">
+                <div class="prompt-input-wrapper">
+                    <i data-lucide="plus" class="prompt-icon"></i>
+                    <textarea id="prompt" rows="2" placeholder="Describe any visual idea. We will generate an image..."></textarea>
+                </div>
+
+                <!-- FLOATING TOOLBAR INSIDE DOCK -->
+                <div class="dock-toolbar">
+                    <div class="toolbar-left">
+                        <!-- Model Selection Pill -->
+                        <div class="dock-pill-select">
+                            <i data-lucide="box" class="pill-icon"></i>
+                            <select id="model-select" onchange="onModelChange()">
+                                <option value="">-- Select Model --</option>
+                            </select>
+                        </div>
+
+                        <!-- Aspect Ratio Pill -->
+                        <div class="dock-pill-select">
+                            <i data-lucide="rectangle-horizontal" class="pill-icon"></i>
+                            <select id="aspect-ratio" onchange="applyAspectRatio(this.value)">
+                                <option value="1:1">1:1 Square (512x512)</option>
+                                <option value="16:9">16:9 Landscape (1024x576)</option>
+                                <option value="9:16">9:16 Portrait (576x1024)</option>
+                                <option value="4:3">4:3 Standard (768x576)</option>
+                                <option value="3:4">3:4 Portrait (576x768)</option>
+                                <option value="1024:1024">1024×1024 HD</option>
+                            </select>
+                        </div>
+
+                        <!-- Quality Enhancer Lucide Custom Dropdown -->
+                        <div class="custom-dropdown" id="dropdown-style">
+                            <button class="custom-dropdown-trigger" type="button" onclick="toggleCustomDropdown('dropdown-style')">
+                                <i data-lucide="sparkles" class="dropdown-trigger-icon" id="style-selected-icon"></i>
+                                <span id="style-selected-label">Photorealistic</span>
+                                <i data-lucide="chevron-down" class="dropdown-arrow"></i>
+                            </button>
+                            <div class="custom-dropdown-menu" id="style-dropdown-menu">
+                                <div class="custom-dropdown-item active" onclick="selectStylePreset('photorealistic', 'Photorealistic', 'sparkles', 'dropdown-style')">
+                                    <i data-lucide="sparkles"></i>
+                                    <span>Photorealistic</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('cinematic', 'Cinematic Film', 'clapperboard', 'dropdown-style')">
+                                    <i data-lucide="clapperboard"></i>
+                                    <span>Cinematic Film</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('anime', 'Anime Visual', 'palette', 'dropdown-style')">
+                                    <i data-lucide="palette"></i>
+                                    <span>Anime Visual</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('cyberpunk', 'Cyberpunk Neon', 'zap', 'dropdown-style')">
+                                    <i data-lucide="zap"></i>
+                                    <span>Cyberpunk Neon</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('3d', '3D Render', 'box', 'dropdown-style')">
+                                    <i data-lucide="box"></i>
+                                    <span>3D Render</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="quality-preset" value="photorealistic">
+                        </div>
+
+                        <!-- Settings Link -->
+                        <a href="/settings" class="btn-dock-pill" id="btn-settings">
+                            <i data-lucide="settings"></i>
+                            <span>Settings</span>
+                        </a>
+                    </div>
+
+                    <div class="toolbar-right">
+                        <!-- NEON LIME GENERATE BUTTON -->
+                        <button class="btn-generate-neon" id="btn-generate" onclick="startGeneration()">
+                            <span>Generate</span>
+                            <i data-lucide="zap" class="btn-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- HYPER-SD FAST BADGE -->
+                <div id="hyper-sd-badge" class="hyper-badge" style="display: none;">
+                    <i data-lucide="zap"></i>
+                    <span>⚡ ByteDance Hyper-SD 1-Step Fast Generation Mode Active</span>
+                </div>
+            </div>
+
+            <!-- QUALITY GUIDANCE TIP BANNER -->
+            <div class="quality-tip-banner">
+                <i data-lucide="lightbulb" class="tip-icon"></i>
+                <span><strong>Pro Tip for Ultra Quality:</strong> To render ultra-sharp high-definition visuals, increase <strong>Inference Steps (25–50 steps)</strong> in Settings and pick <strong>Photorealistic</strong> mode!</span>
+            </div>
+
+            <!-- RECENT GENERATIONS DOCK (LOCATED JUST BELOW INPUT BOX) -->
+            <div class="recent-dock-container" id="recent-dock">
+                <div class="recent-dock-header">
+                    <div class="recent-dock-title">
+                        <i data-lucide="history"></i>
+                        <span>Recently Generated Images</span>
+                    </div>
+                    <button class="btn-text-action" onclick="loadGallery()">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                <div class="recent-dock-scroll" id="recent-dock-grid">
+                    <!-- Dynamic Recent Thumbnail Cards -->
+                </div>
+            </div>
+
+            <!-- HIDDEN SETTINGS FALLBACKS (MANAGED VIA /settings) -->
+            <div style="display: none;">
+                <input type="hidden" id="width" value="512">
+                <input type="hidden" id="height" value="512">
+                <span id="val-width">512</span>
+                <span id="val-height">512</span>
+            </div>
+        </section>
+
+
+        <!-- DISPLAY CANVAS & GENERATION SHOWCASE -->
+        <section class="display-section">
+            <div class="canvas-viewport">
+                <!-- Empty Placeholder -->
+                <div class="canvas-placeholder" id="placeholder-view">
+                    <div class="placeholder-icon-ring">
+                        <i data-lucide="wand-2"></i>
+                    </div>
+                    <h2>Ready to Create</h2>
+                    <p>Select your model, type a prompt, and hit <strong>Generate</strong> to render high-resolution visuals.</p>
+                </div>
+
+                <!-- Preview Image -->
+                <img id="main-preview" src="" alt="Generated Visual" style="display: none;">
+
+                <!-- Floating Toolbar On Image -->
+                <div class="canvas-overlay-bar" id="canvas-overlay" style="display: none;">
+                    <button class="overlay-btn" onclick="downloadCurrentImage()" title="Download Full Resolution">
+                        <i data-lucide="download"></i>
+                        <span>Download</span>
+                    </button>
+                    <button class="overlay-btn" onclick="copyCurrentPrompt()" title="Copy Prompt">
+                        <i data-lucide="copy"></i>
+                        <span>Copy Prompt</span>
+                    </button>
+                    <span id="image-meta-badge" class="meta-badge">512×512</span>
+                </div>
+
+                <!-- Live Progress Overlay -->
+                <div class="progress-box-overlay" id="progress-overlay" style="display: none;">
+                    <div class="progress-info">
+                        <div class="spinner-ring"></div>
+                        <span id="status-msg">Initializing neural pipeline...</span>
+                        <span id="status-percent" class="percent-tag">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" id="status-bar-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENT GENERATIONS GALLERY GRID -->
+            <div class="gallery-container">
+                <div class="gallery-header">
+                    <div class="gallery-title">
+                        <i data-lucide="images"></i>
+                        <span>Recent Generations</span>
+                        <span class="hint" id="model-count-hint">-- models found</span>
+                    </div>
+                    <button class="btn-text-action" onclick="loadGallery()">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Refresh Gallery</span>
+                    </button>
+                </div>
+
+                <div class="gallery-grid" id="gallery-grid">
+                    <!-- Dynamic Gallery Cards -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SCRIPT -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
