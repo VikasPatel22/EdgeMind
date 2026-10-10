@@ -92,6 +92,9 @@ function applyAspectRatio(ratio) {
         case '1024:1024': w = 1024; h = 1024; break;
     }
     setDimensions(w, h);
+    if (typeof saveAllSettings === 'function') {
+        saveAllSettings();
+    }
 }
 
 function setDimensions(w, h) {
@@ -144,6 +147,10 @@ function saveAllSettings() {
     const fp16El = document.getElementById('opt-fp16');
     const autoEnhanceEl = document.getElementById('auto-enhance');
     const negPromptEl = document.getElementById('negative-prompt');
+    const modelSelectEl = document.getElementById('model-select');
+    const widthEl = document.getElementById('width');
+    const heightEl = document.getElementById('height');
+    const aspectSelectEl = document.getElementById('aspect-ratio');
 
     const settings = {
         quality_preset: document.getElementById('quality-preset')?.value || existing.quality_preset || 'photorealistic',
@@ -156,10 +163,21 @@ function saveAllSettings() {
         opt_cpu_offload: cpuOffloadEl ? cpuOffloadEl.checked : (existing.opt_cpu_offload ?? true),
         opt_vae_tiling: vaeTilingEl ? vaeTilingEl.checked : (existing.opt_vae_tiling ?? true),
         opt_attn_slicing: attnSlicingEl ? attnSlicingEl.checked : (existing.opt_attn_slicing ?? true),
-        opt_fp16: fp16El ? fp16El.checked : (existing.opt_fp16 ?? true)
+        opt_fp16: fp16El ? fp16El.checked : (existing.opt_fp16 ?? true),
+        model_path: (modelSelectEl && modelSelectEl.value) ? modelSelectEl.value : (existing.model_path || null),
+        width: widthEl ? parseInt(widthEl.value) : (existing.width || 512),
+        height: heightEl ? parseInt(heightEl.value) : (existing.height || 512),
+        aspect_ratio: aspectSelectEl ? aspectSelectEl.value : (existing.aspect_ratio || '1:1')
     };
 
     localStorage.setItem('edgemind_settings', JSON.stringify(settings));
+
+    // Persist to server backend
+    fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+    }).catch(err => console.warn('Could not sync settings to server:', err));
 
     const toast = document.getElementById('save-toast');
     if (toast) {
@@ -169,10 +187,8 @@ function saveAllSettings() {
 }
 
 function loadSavedSettings() {
-    const raw = localStorage.getItem('edgemind_settings');
-    if (!raw) return;
-    try {
-        const s = JSON.parse(raw);
+    function applySettingsToUI(s) {
+        if (!s) return;
         if (s.quality_preset) {
             const iconMap = {
                 photorealistic: { label: 'Photorealistic', icon: 'sparkles' },
@@ -192,8 +208,12 @@ function loadSavedSettings() {
             }
         }
 
-        if (document.getElementById('auto-enhance')) document.getElementById('auto-enhance').checked = s.auto_enhance;
-        if (document.getElementById('negative-prompt')) document.getElementById('negative-prompt').value = s.negative_prompt || '';
+        if (document.getElementById('auto-enhance') && s.auto_enhance !== undefined) {
+            document.getElementById('auto-enhance').checked = s.auto_enhance;
+        }
+        if (document.getElementById('negative-prompt') && s.negative_prompt !== undefined) {
+            document.getElementById('negative-prompt').value = s.negative_prompt;
+        }
         
         if (s.steps !== undefined) setSteps(s.steps);
         if (s.cfg_scale !== undefined) setCFG(s.cfg_scale);
@@ -201,15 +221,39 @@ function loadSavedSettings() {
         if (document.getElementById('sampler') && s.sampler) document.getElementById('sampler').value = s.sampler;
         if (document.getElementById('seed') && s.seed !== undefined) document.getElementById('seed').value = s.seed;
 
-        if (document.getElementById('opt-cpu-offload')) document.getElementById('opt-cpu-offload').checked = s.opt_cpu_offload;
-        if (document.getElementById('opt-vae-tiling')) document.getElementById('opt-vae-tiling').checked = s.opt_vae_tiling;
-        if (document.getElementById('opt-attn-slicing')) document.getElementById('opt-attn-slicing').checked = s.opt_attn_slicing;
-        if (document.getElementById('opt-fp16')) document.getElementById('opt-fp16').checked = s.opt_fp16;
+        if (document.getElementById('opt-cpu-offload') && s.opt_cpu_offload !== undefined) document.getElementById('opt-cpu-offload').checked = s.opt_cpu_offload;
+        if (document.getElementById('opt-vae-tiling') && s.opt_vae_tiling !== undefined) document.getElementById('opt-vae-tiling').checked = s.opt_vae_tiling;
+        if (document.getElementById('opt-attn-slicing') && s.opt_attn_slicing !== undefined) document.getElementById('opt-attn-slicing').checked = s.opt_attn_slicing;
+        if (document.getElementById('opt-fp16') && s.opt_fp16 !== undefined) document.getElementById('opt-fp16').checked = s.opt_fp16;
+
+        if (s.width && s.height && typeof setDimensions === 'function') {
+            setDimensions(s.width, s.height);
+        }
+        if (s.aspect_ratio && document.getElementById('aspect-ratio')) {
+            document.getElementById('aspect-ratio').value = s.aspect_ratio;
+        }
 
         refreshLucideIcons();
-    } catch (e) {
-        console.error('Error loading settings:', e);
     }
+
+    // 1. Instant local restore
+    const raw = localStorage.getItem('edgemind_settings');
+    if (raw) {
+        try {
+            applySettingsToUI(JSON.parse(raw));
+        } catch (e) {}
+    }
+
+    // 2. Fetch server settings to stay in sync
+    fetch('/api/settings')
+        .then(r => r.json())
+        .then(data => {
+            if (data && data.settings) {
+                applySettingsToUI(data.settings);
+                localStorage.setItem('edgemind_settings', JSON.stringify(data.settings));
+            }
+        })
+        .catch(err => console.warn('Could not fetch server settings:', err));
 }
 
 function resetDefaultSettings() {
@@ -414,6 +458,9 @@ function refreshModels() {
 
 function onModelChange() {
     toggleHyperSdBadge(false);
+    if (typeof saveAllSettings === 'function') {
+        saveAllSettings();
+    }
 }
 
 function toggleHyperSdBadge(active) {

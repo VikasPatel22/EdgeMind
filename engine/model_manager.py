@@ -21,30 +21,53 @@ current_model_info = {
 }
 
 def find_hyper_sd_lora(model_path=""):
-    """Finds Hyper-SD 1-step LoRA safetensors file in models directory or adjacent paths."""
+    """Finds Hyper-SD 1-step LoRA safetensors file in models directory, environment variables, or adjacent paths."""
     candidates = []
     
-    # 1. Direct path check if explicit file exists
-    explicit_hyper = r"C:\Users\vikas\Desktop\Vikas Patel\Project Vorenthos-4\edgemind\models\Hyper-SD15-1step-lora.safetensors"
-    if os.path.exists(explicit_hyper):
-        candidates.append(explicit_hyper)
-        
+    # 1. Environment variable check
+    env_hyper = os.environ.get("HYPER_SD_LORA_PATH")
+    if env_hyper and os.path.exists(env_hyper):
+        candidates.append(env_hyper)
+
     # 2. Check edgemind/models directory
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     models_dir = os.path.join(base_dir, "models")
     if os.path.exists(models_dir):
+        # Direct filename match
+        direct_candidate = os.path.join(models_dir, "Hyper-SD15-1step-lora.safetensors")
+        if os.path.exists(direct_candidate):
+            candidates.append(direct_candidate)
+
         for f in os.listdir(models_dir):
             if f.endswith(".safetensors") and ("hyper" in f.lower() or "1step" in f.lower()):
-                candidates.append(os.path.join(models_dir, f))
+                candidate_path = os.path.join(models_dir, f)
+                if candidate_path not in candidates:
+                    candidates.append(candidate_path)
                 
-    # 3. Check directory of current model_path if provided
+    # 3. Check custom models directory from environment
+    custom_models_dir = os.environ.get("EDGEMIND_MODELS_DIR") or os.environ.get("MODELS_DIR")
+    if custom_models_dir and os.path.exists(custom_models_dir):
+        for f in os.listdir(custom_models_dir):
+            if f.endswith(".safetensors") and ("hyper" in f.lower() or "1step" in f.lower()):
+                candidate_path = os.path.join(custom_models_dir, f)
+                if candidate_path not in candidates:
+                    candidates.append(candidate_path)
+
+    # 4. Check directory of current model_path if provided
     if model_path and os.path.isfile(model_path):
         model_dir = os.path.dirname(model_path)
         if os.path.exists(model_dir):
             for f in os.listdir(model_dir):
                 if f.endswith(".safetensors") and ("hyper" in f.lower() or "1step" in f.lower()):
-                    candidates.append(os.path.join(model_dir, f))
+                    candidate_path = os.path.join(model_dir, f)
+                    if candidate_path not in candidates:
+                        candidates.append(candidate_path)
                 
+    # 5. Local workspace fallback if explicit file exists
+    explicit_hyper = r"C:\Users\vikas\Desktop\Vikas Patel\Project Vorenthos-4\edgemind\models\Hyper-SD15-1step-lora.safetensors"
+    if os.path.exists(explicit_hyper) and explicit_hyper not in candidates:
+        candidates.append(explicit_hyper)
+
     return candidates[0] if candidates else None
 
 
@@ -89,19 +112,41 @@ def scan_models(models_dir):
     found_models = []
     seen_paths = set()
     
-    scan_paths = [models_dir]
+    scan_paths = []
+    if models_dir and os.path.exists(models_dir):
+        scan_paths.append(models_dir)
+
+    # Environment variable custom directory (Linux, macOS, Windows)
+    custom_models_env = os.environ.get("EDGEMIND_MODELS_DIR") or os.environ.get("MODELS_DIR")
+    if custom_models_env and os.path.exists(custom_models_env) and custom_models_env not in scan_paths:
+        scan_paths.append(custom_models_env)
     
+    # Hugging Face default cache
     hf_cache = os.path.expanduser("~/.cache/huggingface/hub")
-    if os.path.exists(hf_cache):
+    if os.path.exists(hf_cache) and hf_cache not in scan_paths:
         scan_paths.append(hf_cache)
 
-    common_sd_paths = [
+    # Cross-platform common WebUI, Fooocus, and ComfyUI checkpoints
+    home_dir = os.path.expanduser("~")
+    common_search_paths = [
+        # Linux & macOS home directories
+        os.path.join(home_dir, "stable-diffusion-webui", "models", "Stable-diffusion"),
+        os.path.join(home_dir, "Fooocus", "models", "checkpoints"),
+        os.path.join(home_dir, "ComfyUI", "models", "checkpoints"),
+        os.path.join(home_dir, "models"),
+        # Windows default paths
         "C:/stable-diffusion-webui/models/Stable-diffusion",
         "C:/Fooocus/models/checkpoints",
-        "C:/ComfyUI/models/checkpoints"
+        "C:/ComfyUI/models/checkpoints",
+        "D:/stable-diffusion-webui/models/Stable-diffusion",
+        "D:/Fooocus/models/checkpoints",
+        "D:/ComfyUI/models/checkpoints",
+        # Linux /opt paths
+        "/opt/stable-diffusion-webui/models/Stable-diffusion",
+        "/opt/ComfyUI/models/checkpoints"
     ]
-    for p in common_sd_paths:
-        if os.path.exists(p):
+    for p in common_search_paths:
+        if os.path.exists(p) and p not in scan_paths:
             scan_paths.append(p)
 
     for base_path in scan_paths:
@@ -170,9 +215,81 @@ def scan_models(models_dir):
 
     return found_models
 
+# Model Keep-Alive & Auto-Unload Timer State
+model_timer_lock = threading.Lock()
+model_unload_timer = None
+model_auto_unload_time = None
+
+def cancel_auto_unload_timer():
+    """Cancels any pending auto-unload countdown."""
+    global model_unload_timer, model_auto_unload_time
+    with model_timer_lock:
+        if model_unload_timer is not None:
+            try:
+                model_unload_timer.cancel()
+            except Exception:
+                pass
+            model_unload_timer = None
+        model_auto_unload_time = None
+
+def schedule_auto_unload(mins):
+    """
+    Schedules an automatic model unload after `mins` minutes of inactivity.
+    If mins <= 0: unloads immediately.
+    If mins is None: leaves loaded without timer.
+    """
+    global model_unload_timer, model_auto_unload_time
+    cancel_auto_unload_timer()
+    
+    if mins is None:
+        return None
+        
+    try:
+        mins = float(mins)
+    except (ValueError, TypeError):
+        return None
+        
+    if mins <= 0:
+        unload_model()
+        return "unloaded_now"
+        
+    seconds = mins * 60.0
+    with model_timer_lock:
+        model_auto_unload_time = time.time() + seconds
+        
+        def timer_callback():
+            print(f"[EdgeMind] Auto-unload timer expired ({mins} mins). Unloading model...")
+            unload_model()
+            
+        model_unload_timer = threading.Timer(seconds, timer_callback)
+        model_unload_timer.daemon = True
+        model_unload_timer.start()
+        
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(model_auto_unload_time))
+
+def get_model_lifecycle_status():
+    """Returns the current model memory status and auto-unload countdown."""
+    global model_auto_unload_time
+    is_loaded = current_model_info.get("loaded", False)
+    remaining_secs = 0
+    unload_at = None
+    if is_loaded and model_auto_unload_time:
+        remaining_secs = max(0, int(model_auto_unload_time - time.time()))
+        unload_at = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(model_auto_unload_time))
+    return {
+        "loaded": is_loaded,
+        "model": current_model_info.get("name"),
+        "path": current_model_info.get("path"),
+        "hyper_sd_active": current_model_info.get("hyper_sd_active", False),
+        "auto_unload_at": unload_at,
+        "remaining_seconds": remaining_secs,
+        "remaining_minutes": round(remaining_secs / 60.0, 1) if remaining_secs > 0 else 0
+    }
+
 def unload_model():
     """Smart offloading: Frees GPU VRAM and clears CUDA / System memory."""
     global current_model_info
+    cancel_auto_unload_timer()
     if current_model_info["pipeline"] is not None:
         try:
             del current_model_info["pipeline"]

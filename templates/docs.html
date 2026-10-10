@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeMind AI Studio — API Documentation</title>
+    <!-- FAVICON -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <!-- LOCAL OFFLINE FONTS & LUCIDE ICONS -->
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script src="/static/js/lucide.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .docs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 80px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+        .docs-badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(217, 249, 157, 0.12);
+            border: 1px solid rgba(217, 249, 157, 0.3);
+            border-radius: var(--radius-pill);
+            color: var(--accent-lime);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .badge-pill.cyan {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: var(--accent-cyan);
+        }
+        .badge-pill.purple {
+            background: rgba(192, 132, 252, 0.12);
+            border-color: rgba(192, 132, 252, 0.3);
+            color: var(--accent-purple);
+        }
+        .docs-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .endpoint-pill-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            background: rgba(10, 14, 23, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+            font-size: 15px;
+        }
+        .method-tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        .method-post {
+            background: rgba(56, 189, 248, 0.2);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        .method-get {
+            background: rgba(217, 249, 157, 0.2);
+            border: 1px solid var(--accent-lime);
+            color: var(--accent-lime);
+        }
+        .endpoint-url {
+            color: #f8fafc;
+            font-weight: 600;
+        }
+        .code-container {
+            background: #05070a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .code-body {
+            padding: 16px;
+            margin: 0;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+        .code-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: var(--accent-lime);
+            border-bottom-color: var(--accent-lime);
+        }
+        .tab-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-primary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-copy:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent-lime);
+            color: var(--accent-lime);
+        }
+        /* Interactive Tester */
+        .tester-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 900px) {
+            .tester-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .param-table th {
+            text-align: left;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .param-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+        .param-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .param-name {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+        .param-type {
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        .param-req {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .req-yes {
+            background: rgba(244, 114, 182, 0.2);
+            color: var(--accent-pink);
+        }
+        .req-no {
+            background: rgba(217, 249, 157, 0.15);
+            color: var(--accent-lime);
+        }
+        .interactive-preview {
+            min-height: 280px;
+            background: #05070a;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .interactive-preview img {
+            max-width: 100%;
+            max-height: 380px;
+            border-radius: var(--radius-md);
+            object-fit: contain;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .stats-badge-box {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .stat-card-mini {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 8px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .stat-card-mini span:first-child {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .stat-card-mini span:last-child {
+            font-size: 16px;
+            color: var(--accent-lime);
+            font-weight: 800;
+            font-family: var(--font-mono);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER NAVBAR -->
+    <header class="top-navbar">
+        <div class="brand-group">
+            <div class="brand-icon">
+                <i data-lucide="cpu" class="icon-brand"></i>
+            </div>
+            <div>
+                <div class="brand-title">EdgeMind <span class="badge-tag">VORENTHIC LABS</span></div>
+                <div class="brand-subtitle">Self-Optimizing Local Neural Engine</div>
+            </div>
+        </div>
+
+        <!-- MAIN NAVIGATION LINKS -->
+        <nav class="nav-links">
+            <a href="/" class="nav-link">
+                <i data-lucide="wand-2"></i>
+                <span>Studio</span>
+            </a>
+            <a href="/settings" class="nav-link">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </a>
+            <a href="/docs" class="nav-link active">
+                <i data-lucide="book-open"></i>
+                <span>API Docs</span>
+            </a>
+        </nav>
+
+        <!-- MOBILE HUD TOGGLE -->
+        <button class="mobile-hud-toggle" onclick="toggleMobileHud()" title="System Stats">
+            <i data-lucide="activity"></i>
+        </button>
+
+        <!-- HARDWARE TELEMETRY HUD -->
+        <div class="telemetry-hud">
+            <div class="hud-item" id="profile-badge">
+                <span class="status-dot"></span>
+                <span id="profile-name">Detecting Hardware...</span>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="microchip"></i>
+                    <span>GPU / ENGINE</span>
+                </div>
+                <div class="stat-val" id="device-name">--</div>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="gauge"></i>
+                    <span>VRAM ALLOCATION</span>
+                </div>
+                <div class="stat-val" id="vram-val">-- / -- GB</div>
+                <div class="stat-progress"><div class="stat-bar" id="vram-bar" style="width: 0%"></div></div>
+            </div>
+
+            <div class="hud-item hud-stat">
+                <div class="stat-header">
+                    <i data-lucide="layers"></i>
+                    <span>SYSTEM RAM</span>
+                </div>
+                <div class="stat-val" id="ram-val">-- / -- GB</div>
+                <div class="stat-progress"><div class="stat-bar ram" id="ram-bar" style="width: 0%"></div></div>
+            </div>
+
+            <button class="btn-icon-action" onclick="unloadModel()" title="Free VRAM & Unload Model">
+                <i data-lucide="trash-2"></i>
+                <span>Free VRAM</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- DOCUMENTATION CONTAINER -->
+    <main class="docs-container">
+        
+        <!-- PAGE HEADER -->
+        <section class="settings-page-header">
+            <div class="settings-title-group">
+                <div class="settings-header-icon" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(217, 249, 157, 0.2)); border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                    <i data-lucide="terminal"></i>
+                </div>
+                <div>
+                    <h1>EdgeMind Image Generation API</h1>
+                    <p>Streamlined local REST API requiring only an API key and prompt. Generates visuals directly using your current EdgeMind settings.</p>
+                    <div class="docs-badge-row">
+                        <span class="badge-pill"><i data-lucide="key"></i> API Key: "edgemind"</span>
+                        <span class="badge-pill cyan"><i data-lucide="message-square"></i> Prompt Only</span>
+                        <span class="badge-pill purple"><i data-lucide="image"></i> Direct Image Response</span>
+                        <span class="badge-pill"><i data-lucide="sliders"></i> Uses Current EdgeMind Settings</span>
+                    </div>
+                </div>
+            </div>
+            <a href="/" class="btn-generate-neon">
+                <i data-lucide="sparkles"></i>
+                <span>Open Studio UI</span>
+            </a>
+        </section>
+
+        <!-- SECTION 1: ENDPOINT OVERVIEW & SPECIFICATION -->
+        <section class="docs-card">
+            <div class="card-header">
+                <i data-lucide="globe" class="card-icon"></i>
+                <h2>Endpoint Specification</h2>
+            </div>
+
+            <div class="endpoint-pill-bar">
+                <span class="method-tag method-post">POST</span>
+                <span class="method-tag method-get">GET</span>
+                <span class="endpoint-url">/api/v1/generate</span>
+                <span style="color: var(--text-muted); font-size: 12px;">(Alias: <code>/api/image-gen</code>)</span>
+            </div>
+
+            <p style="color: var(--text-secondary); line-height: 1.6;">
+                This endpoint is designed for <strong>maximum simplicity</strong>. 
+                You only need to supply the pre-configured API key <strong style="color: var(--accent-lime); font-family: var(--font-mono);">edgemind</strong> and your visual <strong style="color: var(--accent-cyan); font-family: var(--font-mono);">prompt</strong>. 
+                All generation parameters—including the <strong>active model, inference steps, guidance scale (CFG), sampler, resolution, style preset, auto-enhancement, and negative prompt</strong>—are automatically inherited from your <strong>current EdgeMind settings</strong>.
+                Upon completion, the endpoint <strong>directly returns the synthesized PNG image</strong>!
+            </p>
+
+            <h3 style="font-size: 16px; margin-top: 8px;">Authentication</h3>
+            <p style="color: var(--text-secondary); font-size: 14px;">
+                Supply the API key <code style="color: var(--accent-lime);">edgemind</code> via:
+            </p>
+            <ul style="color: var(--text-secondary); font-size: 14px; margin-left: 20px; line-height: 1.8;">
+                <li>Header: <code style="color: #fff;">X-API-Key: edgemind</code> <em>(Recommended)</em></li>
+                <li>Header: <code style="color: #fff;">Authorization: Bearer edgemind</code></li>
+                <li>Query parameter: <code style="color: #fff;">?api_key=edgemind</code></li>
+                <li>JSON Body: <code style="color: #fff;">{"api_key": "edgemind"}</code></li>
+            </ul>
+
+            <h3 style="font-size: 16px; margin-top: 8px;">Request Parameters</h3>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Requirement</th>
+                        <th>Description & Behavior</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="param-name">api_key</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td><span class="param-req req-yes">REQUIRED</span></td>
+                        <td>Must match <code>"edgemind"</code> (via header, query, or body).</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">prompt</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td><span class="param-req req-yes">REQUIRED</span></td>
+                        <td>Description of the visual image you want to create.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="param-name">format</span></td>
+                        <td><span class="param-type">string</span></td>
+                        <td><span class="param-req req-no">OPTIONAL</span></td>
+                        <td>Defaults to <strong>direct image stream</strong> (PNG binary). Pass <code>"json"</code> only if URL/Base64 metadata is required.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 14px; padding: 14px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                <strong style="color: var(--accent-cyan);">⚡ Automatic EdgeMind Settings Inheritance:</strong><br>
+                When you call this endpoint, EdgeMind applies all settings currently active in the Studio and Settings panels:
+                active model, inference steps (e.g. 1-step Hyper-SD or 25-step quality), guidance scale, sampler, aspect ratio dimensions, negative prompt, and quality enhancer.
+            </div>
+        </section>
+
+        <!-- SECTION 2: INTERACTIVE LIVE API TESTER -->
+        <section class="docs-card">
+            <div class="card-header">
+                <i data-lucide="play" class="card-icon" style="color: var(--accent-lime);"></i>
+                <h2>Interactive Live Tester</h2>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 14px;">
+                Test generation and model lifecycle management directly in your browser. Experience zero-config generation, instant loading/unloading, and auto-unload timers!
+            </p>
+
+            <div class="tester-grid">
+                <!-- FORM CONTROLS -->
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="field-group">
+                        <label>API Key (Header / Query)</label>
+                        <div class="input-glow-wrapper">
+                            <input type="text" id="test-api-key" value="edgemind" placeholder="Enter API Key">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Prompt (Required)</label>
+                        <div class="input-glow-wrapper">
+                            <textarea id="test-prompt" rows="3" placeholder="Enter any image description (e.g., A cybernetic owl perched on a neon branch)..."></textarea>
+                        </div>
+                    </div>
+
+                    <div style="padding: 10px 14px; background: rgba(217, 249, 157, 0.08); border: 1px solid rgba(217, 249, 157, 0.2); border-radius: 8px; font-size: 12px; color: var(--accent-lime); display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="sliders" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+                        <span>Inference runs using current EdgeMind settings (active model, steps, sampler, resolution, style preset).</span>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Response Delivery</label>
+                        <div class="custom-dropdown" id="dropdown-format" style="width: 100%;">
+                            <select id="test-format" class="input-glow-wrapper" style="width: 100%; padding: 10px; background: rgba(18, 24, 37, 0.85); color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;">
+                                <option value="image" selected>Direct Raw Image (PNG Binary)</option>
+                                <option value="json">JSON Response (Metadata & Base64)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                        <button class="btn-generate-neon" id="test-submit-btn" onclick="executeApiTest()" style="width: 100%;">
+                            <i data-lucide="zap"></i>
+                            <span id="test-btn-text">Generate Image</span>
+                        </button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <button class="btn-text-action" onclick="executeModelAction('load')" style="justify-content: center; padding: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: var(--accent-cyan); cursor: pointer;">
+                                <i data-lucide="upload-cloud"></i>
+                                <span>Load Model Now</span>
+                            </button>
+                            <button class="btn-text-action danger" onclick="executeModelAction('unload')" style="justify-content: center; padding: 10px; background: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.3); border-radius: 8px; color: var(--accent-pink); cursor: pointer;">
+                                <i data-lucide="trash-2"></i>
+                                <span>Unload Now</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESULTS PREVIEW -->
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <label style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">Response & Generated Image</label>
+                    <div class="interactive-preview" id="test-preview-box">
+                        <div id="test-preview-placeholder" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                            <i data-lucide="image" style="width: 48px; height: 48px; stroke-width: 1.5; margin-bottom: 8px;"></i>
+                            <p>Hit <strong>Execute Endpoint Request</strong> to trigger generation</p>
+                        </div>
+                        <img id="test-result-img" src="" alt="Generated Artwork" style="display: none;">
+                    </div>
+
+                    <div class="stats-badge-box" id="test-stats-box" style="display: none;">
+                        <div class="stat-card-mini">
+                            <span>Steps Completed</span>
+                            <span id="test-stat-steps">--</span>
+                        </div>
+                        <div class="stat-card-mini">
+                            <span>Elapsed Time</span>
+                            <span id="test-stat-time">--</span>
+                        </div>
+                        <div class="stat-card-mini">
+                            <span>Status Code</span>
+                            <span id="test-stat-status" style="color: var(--accent-cyan);">200 OK</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAW JSON RESPONSE INSPECTOR -->
+            <div class="code-container" id="test-json-container" style="display: none; margin-top: 12px;">
+                <div class="code-header">
+                    <span>Response JSON Body</span>
+                    <button class="btn-copy" onclick="copyResponseJson()"><i data-lucide="copy"></i> Copy JSON</button>
+                </div>
+                <pre class="code-body" id="test-json-output">{}</pre>
+            </div>
+        </section>
+
+        <!-- SECTION 3: READY-TO-USE CODE SNIPPETS -->
+        <section class="docs-card">
+            <div class="card-header">
+                <i data-lucide="code" class="card-icon" style="color: var(--accent-cyan);"></i>
+                <h2>Code Integration Examples</h2>
+            </div>
+
+            <!-- TABS -->
+            <div class="code-tabs">
+                <button class="tab-btn active" onclick="switchTab('curl')"><i data-lucide="terminal"></i> cURL</button>
+                <button class="tab-btn" onclick="switchTab('python')"><i data-lucide="file-code"></i> Python (requests)</button>
+                <button class="tab-btn" onclick="switchTab('js')"><i data-lucide="file-code-2"></i> JavaScript (fetch)</button>
+            </div>
+
+            <!-- TAB 1: cURL -->
+            <div class="tab-panel active" id="tab-curl">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Direct Image Generation (Saves PNG directly)</span>
+                        <button class="btn-copy" onclick="copyCode('code-curl-zero')"><i data-lucide="copy"></i> Copy</button>
+                    </div>
+                    <pre class="code-body" id="code-curl-zero">curl -X POST http://127.0.0.1:7265/api/v1/generate \
+  -H "X-API-Key: edgemind" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A cybernetic wolf in a neon rainforest, 8k resolution"}' \
+  --output image.png</pre>
+                </div>
+
+                <div class="code-container" style="margin-top: 14px;">
+                    <div class="code-header">
+                        <span>Via Browser GET URL (Direct Image View)</span>
+                        <button class="btn-copy" onclick="copyCode('code-curl-raw')"><i data-lucide="copy"></i> Copy</button>
+                    </div>
+                    <pre class="code-body" id="code-curl-raw">http://127.0.0.1:7265/api/v1/generate?api_key=edgemind&prompt=cyberpunk+city</pre>
+                </div>
+            </div>
+
+            <!-- TAB 2: Python -->
+            <div class="tab-panel" id="tab-python">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python (requests) — Direct Image Output</span>
+                        <button class="btn-copy" onclick="copyCode('code-python')"><i data-lucide="copy"></i> Copy</button>
+                    </div>
+                    <pre class="code-body" id="code-python">import requests
+
+URL = "http://127.0.0.1:7265/api/v1/generate"
+HEADERS = {"X-API-Key": "edgemind"}
+DATA = {"prompt": "A futuristic floating island with waterfalls, ultra detailed"}
+
+# Endpoint generates image with current EdgeMind settings and directly returns PNG
+response = requests.post(URL, headers=HEADERS, json=DATA)
+
+if response.status_code == 200:
+    with open("generated_output.png", "wb") as f:
+        f.write(response.content)
+    print(f"Image saved! Steps done: {response.headers.get('X-Steps-Done')} ({response.headers.get('X-Elapsed-Time')})")
+else:
+    print("Error:", response.json())</pre>
+                </div>
+            </div>
+
+            <!-- TAB 3: JavaScript -->
+            <div class="tab-panel" id="tab-js">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>JavaScript (Fetch API) — Direct Image Blob</span>
+                        <button class="btn-copy" onclick="copyCode('code-js')"><i data-lucide="copy"></i> Copy</button>
+                    </div>
+                    <pre class="code-body" id="code-js">async function generateImage(prompt) {
+  const response = await fetch("http://127.0.0.1:7265/api/v1/generate", {
+    method: "POST",
+    headers: {
+      "X-API-Key": "edgemind",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ prompt: prompt })
+  });
+
+  if (!response.ok) throw new Error(await response.text());
+
+  // Directly returns the generated PNG image binary
+  const imageBlob = await response.blob();
+  const imageUrl = URL.createObjectURL(imageBlob);
+
+  const img = document.createElement("img");
+  img.src = imageUrl;
+  document.body.appendChild(img);
+}
+
+generateImage("A mystical cosmic nebula shaped like an owl, 8k");</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: RESPONSE SCHEMA -->
+        <section class="docs-card">
+            <div class="card-header">
+                <i data-lucide="file-json" class="card-icon"></i>
+                <h2>Response Schema Details</h2>
+            </div>
+            
+            <p style="color: var(--text-secondary); font-size: 14px;">
+                When calling the endpoint in standard JSON mode, the following response structure is returned:
+            </p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>Example 200 OK Response</span>
+                </div>
+                <pre class="code-body">{
+  "success": true,
+  "message": "Image generated successfully.",
+  "steps_done": 1,
+  "image_url": "/outputs/edgemind_api_1725450123_456789.png",
+  "full_url": "http://127.0.0.1:7265/outputs/edgemind_api_1725450123_456789.png",
+  "filename": "edgemind_api_1725450123_456789.png",
+  "prompt": "A masterpiece cinematic landscape, ultra-detailed digital art, 8k resolution, photorealistic",
+  "model": "dreamshaper_8.safetensors",
+  "elapsed_seconds": 3.42,
+  "width": 512,
+  "height": 512,
+  "seed": 2841920412,
+  "image_base64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6..."
+}</pre>
+            </div>
+
+            <h3 style="font-size: 16px; margin-top: 8px;">Response HTTP Headers</h3>
+            <p style="color: var(--text-secondary); font-size: 14px;">
+                Custom diagnostic headers are always returned on both JSON and raw image stream responses:
+            </p>
+            <ul style="color: var(--text-secondary); font-size: 14px; margin-left: 20px; line-height: 1.8;">
+                <li><code>X-Steps-Done</code>: Contains the integer count of sampling steps performed (e.g. <code>1</code> or <code>20</code>).</li>
+                <li><code>X-Elapsed-Time</code>: Total time taken for model loading and sampling in seconds.</li>
+                <li><code>X-Image-URL</code>: Absolute URL to access the saved PNG image.</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="/static/js/main.js"></script>
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+            const activeBtn = document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`);
+            const activePanel = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            if (activePanel) activePanel.classList.add('active');
+            refreshLucideIcons();
+        }
+
+        function copyCode(elemId) {
+            const el = document.getElementById(elemId);
+            if (!el) return;
+            navigator.clipboard.writeText(el.innerText).then(() => {
+                alert("Code copied to clipboard!");
+            });
+        }
+
+        let lastJsonResponse = null;
+        function copyResponseJson() {
+            if (lastJsonResponse) {
+                navigator.clipboard.writeText(JSON.stringify(lastJsonResponse, null, 2)).then(() => {
+                    alert("Response JSON copied to clipboard!");
+                });
+            }
+        }
+
+        async function executeApiTest() {
+            const apiKey = document.getElementById('test-api-key').value.trim();
+            const prompt = document.getElementById('test-prompt').value.trim();
+            const format = document.getElementById('test-format') ? document.getElementById('test-format').value : 'image';
+            const btn = document.getElementById('test-submit-btn');
+            const btnText = document.getElementById('test-btn-text');
+            const previewBox = document.getElementById('test-preview-box');
+            const placeholder = document.getElementById('test-preview-placeholder');
+            const resultImg = document.getElementById('test-result-img');
+            const statsBox = document.getElementById('test-stats-box');
+            const jsonBox = document.getElementById('test-json-container');
+            const jsonOutput = document.getElementById('test-json-output');
+
+            if (!prompt) {
+                alert("Please enter a prompt to generate.");
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.innerText = "Synthesizing Image with EdgeMind Settings...";
+
+            try {
+                const payload = { prompt: prompt };
+                if (format === 'json') payload.format = 'json';
+
+                const res = await fetch('/api/v1/generate', {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                document.getElementById('test-stat-status').innerText = `${res.status} ${res.statusText}`;
+                document.getElementById('test-stat-steps').innerText = res.headers.get('X-Steps-Done') || '--';
+                document.getElementById('test-stat-time').innerText = res.headers.get('X-Elapsed-Time') || '--';
+                statsBox.style.display = 'flex';
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert("Error: " + (err.message || err.error));
+                    return;
+                }
+
+                if (format === 'json') {
+                    const data = await res.json();
+                    lastJsonResponse = data;
+                    resultImg.src = data.image_url;
+                    resultImg.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    jsonOutput.innerText = JSON.stringify(data, null, 2);
+                    jsonBox.style.display = 'block';
+                } else {
+                    const blob = await res.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+                    resultImg.src = objectUrl;
+                    resultImg.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    jsonBox.style.display = 'none';
+                }
+            } catch (err) {
+                alert("Network or inference error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btnText.innerText = "Generate Image";
+                refreshLucideIcons();
+            }
+        }
+
+        async function executeModelAction(action) {
+            const apiKey = document.getElementById('test-api-key').value.trim();
+            const keepAlive = document.getElementById('test-keep-alive').value.trim();
+            const jsonBox = document.getElementById('test-json-container');
+            const jsonOutput = document.getElementById('test-json-output');
+
+            const payload = { action: action };
+            if (action === 'load' && keepAlive) {
+                payload.keep_alive_mins = parseFloat(keepAlive);
+            }
+
+            try {
+                const res = await fetch('/api/v1/generate', {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                lastJsonResponse = data;
+                jsonOutput.innerText = JSON.stringify(data, null, 2);
+                jsonBox.style.display = 'block';
+                alert((data.action === 'load' ? "Model Loaded: " : "Model Unloaded: ") + (data.message || "Success"));
+            } catch (e) {
+                alert("Action error: " + e.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSystemStats();
+            setInterval(updateSystemStats, 4000);
+            refreshLucideIcons();
+        });
+    </script>
+</body>
+</html>
