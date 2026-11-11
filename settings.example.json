@@ -1,0 +1,17 @@
+{
+    "model_path": null,
+    "quality_preset": "photorealistic",
+    "auto_enhance": true,
+    "negative_prompt": "ugly, blurry, low quality, distorted, extra limbs, bad anatomy",
+    "steps": 1,
+    "cfg_scale": 1.0,
+    "sampler": "Euler",
+    "seed": -1,
+    "width": 512,
+    "height": 512,
+    "aspect_ratio": "1:1",
+    "opt_cpu_offload": true,
+    "opt_vae_tiling": true,
+    "opt_attn_slicing": true,
+    "opt_fp16": true
+}

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeMind AI Studio — Self-Optimizing Local AI Engine</title>
+    <!-- FAVICON -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <!-- LOCAL OFFLINE FONTS & LUCIDE ICONS -->
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script src="/static/js/lucide.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- TOP HEADER NAVBAR -->
+    <header class="top-navbar" id="top-navbar">
+        <div class="brand-group">
+            <div class="brand-icon">
+                <i data-lucide="cpu" class="icon-brand"></i>
+            </div>
+            <div>
+                <div class="brand-title">EdgeMind <span class="badge-tag">AI STUDIO</span></div>
+                <div class="brand-subtitle">Self-Optimizing Local AI</div>
+            </div>
+        </div>
+
+        <!-- MAIN NAVIGATION LINKS -->
+        <nav class="nav-links">
+            <a href="/" class="nav-link active">
+                <i data-lucide="wand-2"></i>
+                <span>Studio</span>
+            </a>
+            <a href="/settings" class="nav-link">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </a>
+            <a href="/docs" class="nav-link">
+                <i data-lucide="book-open"></i>
+                <span>API Docs</span>
+            </a>
+        </nav>
+
+        <!-- MOBILE HUD TOGGLE -->
+        <button class="mobile-hud-toggle" onclick="toggleMobileHud()" title="System Hardware Stats" aria-label="Toggle system hardware stats">
+            <i data-lucide="activity"></i>
+        </button>
+
+        <!-- HARDWARE TELEMETRY HUD -->
+        <div class="telemetry-hud" id="telemetry-hud">
+            <!-- Merged Engine Status Chip (Item 7) -->
+            <div class="hud-item hud-engine-chip" id="engine-status-chip" title="Detecting Hardware...">
+                <span class="status-dot"></span>
+                <span id="engine-status-text">Detecting Hardware...</span>
+            </div>
+
+            <!-- VRAM MEMORY Stat (Item 6) -->
+            <div class="hud-item hud-stat" id="vram-stat-item">
+                <div class="stat-header">
+                    <i data-lucide="activity"></i>
+                    <span>VRAM MEMORY</span>
+                    <span class="stat-num" id="vram-val">--</span>
+                </div>
+                <div class="stat-meter"><div class="meter-fill" id="vram-bar"></div></div>
+            </div>
+
+            <!-- SYSTEM RAM Stat (Item 8) -->
+            <div class="hud-item hud-stat" id="ram-stat-item" title="System RAM">
+                <div class="stat-header">
+                    <i data-lucide="hard-drive"></i>
+                    <span>SYSTEM RAM</span>
+                    <span class="stat-num" id="ram-val">0.0 / 0.0 GB</span>
+                </div>
+                <div class="stat-meter"><div class="meter-fill" id="ram-bar"></div></div>
+            </div>
+
+            <!-- Free VRAM Secondary Action (Item 9) -->
+            <button class="btn-secondary-action" id="btn-free-vram" onclick="unloadModel()" title="Free VRAM & Unload Model" aria-label="Free VRAM and unload model">
+                <i data-lucide="refresh-cw"></i>
+                <span>Free VRAM</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- HERO WORKSPACE -->
+    <main class="hero-container" id="main-content">
+        
+        <!-- HERO HEADLINE -->
+        <section class="hero-headline">
+            <h1>EdgeMind <span class="text-gradient">AI Studio</span></h1>
+            <p>Commercial-ready local visuals in seconds. Every leading model at your fingertips.</p>
+        </section>
+
+        <!-- FLOATING PROMPT BAR (DOCK) -->
+        <section class="prompt-dock-container" id="prompt-dock">
+            <div class="prompt-dock-card">
+                <!-- Auto-growing Textarea with "+" Icon (Item 14) -->
+                <div class="prompt-input-wrapper">
+                    <button type="button" class="btn-attach-icon" id="btn-attach" title="Attach prompt template or preset" aria-label="Attach preset or image">
+                        <i data-lucide="plus"></i>
+                    </button>
+                    <textarea id="prompt" rows="2" placeholder="Describe your image…" aria-label="Image prompt description"></textarea>
+                </div>
+
+                <!-- UNIFIED TOOLBAR INSIDE DOCK (Items 10, 11, 12, 13, 16) -->
+                <div class="dock-toolbar">
+                    <div class="toolbar-left">
+                        <!-- Model Selection Pill with Count Hint (Items 10, 11, 16) -->
+                        <div class="dock-control dock-control-model" id="model-select-wrapper" title="Select Local Model">
+                            <i data-lucide="box" class="pill-icon"></i>
+                            <select id="model-select" onchange="onModelChange()" aria-label="Select AI Model">
+                                <option value="">-- Select Model --</option>
+                            </select>
+                            <span class="model-count-badge" id="model-count-hint" title="Installed Models">--</span>
+                        </div>
+
+                        <!-- Aspect Ratio Pill (Item 11) -->
+                        <div class="dock-control dock-control-aspect" title="Aspect Ratio">
+                            <i data-lucide="rectangle-horizontal" class="pill-icon"></i>
+                            <select id="aspect-ratio" onchange="applyAspectRatio(this.value)" aria-label="Aspect Ratio">
+                                <option value="1:1">1:1 Square (512x512)</option>
+                                <option value="16:9">16:9 Landscape (1024x576)</option>
+                                <option value="9:16">9:16 Portrait (576x1024)</option>
+                                <option value="4:3">4:3 Standard (768x576)</option>
+                                <option value="3:4">3:4 Portrait (576x768)</option>
+                                <option value="1024:1024">1024×1024 HD</option>
+                            </select>
+                        </div>
+
+                        <!-- Quality Enhancer Custom Dropdown (Item 11) -->
+                        <div class="custom-dropdown" id="dropdown-style">
+                            <button class="dock-control custom-dropdown-trigger" type="button" onclick="toggleCustomDropdown('dropdown-style')" aria-label="Quality Preset">
+                                <i data-lucide="sparkles" class="dropdown-trigger-icon" id="style-selected-icon"></i>
+                                <span id="style-selected-label">Photorealistic</span>
+                                <i data-lucide="chevron-down" class="dropdown-arrow"></i>
+                            </button>
+                            <div class="custom-dropdown-menu" id="style-dropdown-menu">
+                                <div class="custom-dropdown-item active" onclick="selectStylePreset('photorealistic', 'Photorealistic', 'sparkles', 'dropdown-style')">
+                                    <i data-lucide="sparkles"></i>
+                                    <span>Photorealistic</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('cinematic', 'Cinematic Film', 'clapperboard', 'dropdown-style')">
+                                    <i data-lucide="clapperboard"></i>
+                                    <span>Cinematic Film</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('anime', 'Anime Visual', 'palette', 'dropdown-style')">
+                                    <i data-lucide="palette"></i>
+                                    <span>Anime Visual</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('cyberpunk', 'Cyberpunk Neon', 'zap', 'dropdown-style')">
+                                    <i data-lucide="zap"></i>
+                                    <span>Cyberpunk Neon</span>
+                                </div>
+                                <div class="custom-dropdown-item" onclick="selectStylePreset('3d', '3D Render', 'box', 'dropdown-style')">
+                                    <i data-lucide="box"></i>
+                                    <span>3D Render</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="quality-preset" value="photorealistic">
+                        </div>
+
+                        <!-- Settings Icon Button (Item 11) -->
+                        <a href="/settings" class="dock-control dock-icon-btn" id="btn-settings" title="Engine & Sampling Settings" aria-label="Engine Settings">
+                            <i data-lucide="settings"></i>
+                        </a>
+                    </div>
+
+                    <div class="toolbar-right">
+                        <!-- High-Contrast Neon Generate Button (Item 12) -->
+                        <button class="btn-generate-primary" id="btn-generate" onclick="startGeneration()" aria-label="Generate Image (Ctrl+Enter)">
+                            <span>Generate</span>
+                            <i data-lucide="zap" class="btn-icon"></i>
+                        </button>
+                        <!-- Red-Outlined Stop Button during generation (Item 13) -->
+                        <button class="btn-stop-primary" id="btn-stop" onclick="cancelGeneration()" style="display: none;" aria-label="Stop Generation">
+                            <i data-lucide="square" class="btn-icon"></i>
+                            <span>Stop</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- HYPER-SD FAST BADGE -->
+                <div id="hyper-sd-badge" class="hyper-badge" style="display: none;">
+                    <i data-lucide="zap"></i>
+                    <span>⚡ ByteDance Hyper-SD 1-Step Fast Generation Mode Active</span>
+                </div>
+            </div>
+
+            <!-- QUALITY GUIDANCE TIP BANNER (Item 19) -->
+            <div class="quality-tip-banner" id="quality-tip-banner">
+                <div class="tip-content">
+                    <i data-lucide="lightbulb" class="tip-icon"></i>
+                    <span><strong>Pro Tip for Ultra Quality:</strong> To render ultra-sharp high-definition visuals, increase <strong>Inference Steps (25–50 steps)</strong> in Settings and pick <strong>Photorealistic</strong> mode!</span>
+                </div>
+                <button type="button" class="btn-tip-dismiss" onclick="dismissProTip()" title="Dismiss Tip" aria-label="Dismiss Pro Tip">
+                    <i data-lucide="x"></i>
+                </button>
+            <!-- RECENT GENERATIONS PREVIEW DOCK (ON INITIAL LANDING PAGE) -->
+            <div class="recent-dock-container" id="recent-dock">
+                <div class="recent-dock-header">
+                    <div class="recent-dock-title">
+                        <i data-lucide="history"></i>
+                        <span>Recently Generated Images</span>
+                    </div>
+                    <button class="btn-text-action" onclick="loadGallery()" title="Refresh Gallery" aria-label="Refresh gallery">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                <div class="recent-dock-scroll" id="recent-dock-grid">
+                    <!-- Dynamic Recent Thumbnail Cards -->
+                </div>
+            </div>
+
+            <!-- HIDDEN SETTINGS FALLBACKS (MANAGED VIA /settings) -->
+            <div style="display: none;">
+                <input type="hidden" id="width" value="512">
+                <input type="hidden" id="height" value="512">
+                <span id="val-width">512</span>
+                <span id="val-height">512</span>
+            </div>
+        </section>
+
+
+        <!-- DISPLAY CANVAS & GENERATION SHOWCASE (Items 2, 3, 4, 15, 17) -->
+        <section class="display-section" id="display-section">
+            <div class="canvas-viewport" id="canvas-viewport">
+                <!-- Empty Placeholder -->
+                <div class="canvas-placeholder" id="placeholder-view">
+                    <div class="placeholder-icon-ring">
+                        <i data-lucide="wand-2"></i>
+                    </div>
+                    <h2>Ready to Create</h2>
+                    <p>Select your model, type a prompt, and hit <strong>Generate</strong> to render high-resolution visuals.</p>
+                </div>
+
+                <!-- Generating Skeleton/Shimmer Placeholder (Item 4) -->
+                <div class="canvas-shimmer" id="shimmer-placeholder" style="display: none;">
+                    <div class="shimmer-scanner"></div>
+                    <div class="shimmer-badge">
+                        <i data-lucide="sparkles" class="spin-slow"></i>
+                        <span id="shimmer-text">Synthesizing visual at selected aspect ratio...</span>
+                    </div>
+                </div>
+
+                <!-- Preview Image & Stale Dimmer Container (Item 4) -->
+                <div class="preview-img-container" id="preview-container" style="display: none;">
+                    <img id="main-preview" src="" alt="Generated Visual">
+                    <!-- Dimmed Stale Image Indicator (Item 4) -->
+                    <div class="previous-result-badge" id="previous-result-badge" style="display: none;">
+                        <i data-lucide="history"></i>
+                        <span>Previous result · Synthesizing new visual...</span>
+                    </div>
+                </div>
+
+                <!-- Floating Toolbar On Image -->
+                <div class="canvas-overlay-bar" id="canvas-overlay" style="display: none;">
+                    <button class="overlay-btn" onclick="openLightboxFromPreview()" title="Enlarge Image" aria-label="Enlarge image in fullscreen modal">
+                        <i data-lucide="maximize-2"></i>
+                        <span>Enlarge</span>
+                    </button>
+                    <button class="overlay-btn" onclick="downloadCurrentImage()" title="Download Full Resolution" aria-label="Download image">
+                        <i data-lucide="download"></i>
+                        <span>Download</span>
+                    </button>
+                    <button class="overlay-btn" onclick="copyCurrentPrompt()" title="Copy Prompt" aria-label="Copy prompt text">
+                        <i data-lucide="copy"></i>
+                        <span>Copy Prompt</span>
+                    </button>
+                    <span id="image-meta-badge" class="meta-badge">512×512</span>
+                </div>
+            </div>
+
+            <!-- LIVE PROGRESS CARD - Placed Directly BELOW image, never overlapping (Items 2 & 15) -->
+            <div class="progress-card-container" id="progress-card" style="display: none;">
+                <div class="progress-card-header">
+                    <div class="progress-header-left">
+                        <div class="progress-spinner-ring" id="progress-spinner">
+                            <i data-lucide="loader-2" class="spin-icon"></i>
+                        </div>
+                        <div class="progress-info-text">
+                            <div class="progress-headline" id="status-msg">Initializing neural pipeline...</div>
+                            <div class="progress-meta-row">
+                                <span class="meta-tag" id="step-tag"><i data-lucide="layers"></i> <span id="step-text">Step -- / --</span></span>
+                                <span class="meta-tag" id="elapsed-tag"><i data-lucide="clock"></i> <span id="elapsed-text">0.0s elapsed</span></span>
+                                <span class="meta-tag" id="eta-tag"><i data-lucide="hourglass"></i> <span id="eta-text">Estimating...</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-header-right">
+                        <button class="btn-cancel-progress" id="btn-cancel-progress" onclick="cancelGeneration()" title="Cancel generation" aria-label="Cancel image generation">
+                            <i data-lucide="x"></i>
+                            <span>Cancel</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill indeterminate" id="status-bar-fill"></div>
+                </div>
+            </div>
+
+            <!-- RECENT GENERATIONS GALLERY (Items 1, 16, 17) -->
+            <div class="gallery-container" id="gallery-container">
+                <div class="gallery-header">
+                    <div class="gallery-title">
+                        <i data-lucide="images"></i>
+                        <span>Recent Generations</span>
+                        <span class="hint" id="gallery-count-hint">0 generations</span>
+                    </div>
+                    <button class="btn-text-action" onclick="loadGallery()" title="Refresh Gallery" aria-label="Refresh Gallery">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Refresh Gallery</span>
+                    </button>
+                </div>
+
+                <div class="gallery-grid" id="gallery-grid">
+                    <!-- Responsive CSS Grid injected via loadGallery() -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FULLSCREEN LIGHTBOX MODAL (Item 17) -->
+    <div class="lightbox-modal" id="lightbox-modal" style="display: none;" onclick="closeLightbox(event)">
+        <div class="lightbox-backdrop"></div>
+        <div class="lightbox-dialog" onclick="event.stopPropagation()">
+            <button class="lightbox-close-btn" onclick="closeLightbox(event)" title="Close enlarged image" aria-label="Close enlarged preview">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="lightbox-img-wrap">
+                <img id="lightbox-img" src="" alt="Enlarged Visual">
+            </div>
+            <div class="lightbox-footer">
+                <p id="lightbox-prompt" class="lightbox-prompt-text"></p>
+                <div class="lightbox-footer-actions">
+                    <button class="btn-secondary-action" onclick="downloadLightboxImage()" title="Download image" aria-label="Download image">
+                        <i data-lucide="download"></i>
+                        <span>Download</span>
+                    </button>
+                    <button class="btn-secondary-action" onclick="copyLightboxPrompt()" title="Copy prompt text" aria-label="Copy prompt text">
+                        <i data-lucide="copy"></i>
+                        <span>Copy Prompt</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
